@@ -37,20 +37,20 @@ class Bot(discord.Client):
         await self.wait_until_ready()
         articles = self.get_articles()
         for title, content in articles:
-            messages = self.create_discord_message(title, content)
+            messages = self.create_discord_messages(title, content)
             for msg in messages:
                 await self.channel.send(msg)
 
     def create_discord_messages(self, title, content):
-    ''' Create list of messages with discord decorators and
-        proper length
-        Parameters:
-            title (str): article title
-            content (str): article title
-        
-        Returns:
-            messages (list): List of discord messages
-    '''
+        ''' Create list of messages with discord decorators and
+            proper length
+            Parameters:
+                title (str): article title
+                content (str): article title
+            
+            Returns:
+                messages (list): List of discord messages
+        '''
         messages = []
         # Split messages so they can fit into discord message buffer
         title = [title[i:i+(MAX_MSG_LENGTH-4)] for i in range(0, len(title), MAX_MSG_LENGTH-4)]
@@ -63,10 +63,10 @@ class Bot(discord.Client):
         return messages
 
     def get_articles(self):
-    ''' Get list od articles to publish
-            Returns:
-                article_list (list): List of tuples (article_title, article_content)
-    '''
+        ''' Get list od articles to publish
+                Returns:
+                    article_list (list): List of tuples (article_title, article_content)
+        '''
         res = bot_utils.get_response(PAGE_URL)
         page = bot_utils.scrap_website(res)
         self.find_newest_articles(page)
