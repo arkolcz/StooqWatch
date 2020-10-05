@@ -1,4 +1,10 @@
+
+import sys
+
+sys.path.append('..')
+
 import discord
+from discord.ext import tasks
 import re
 import requests
 import time
