@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-# Site URL 
+# Site URL
 PAGE_URL = 'https://stooq.pl/'
 
 # Config file name

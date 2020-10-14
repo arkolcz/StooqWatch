@@ -11,7 +11,7 @@ def get_config_data(cfg, key):
         Parameters:
             cfg (str): config file name
             key (str): keyword
-            
+
         Returns:
             str:value
         '''
@@ -23,7 +23,7 @@ def get_response(url):
     '''Get response from website
         Parameters:
             url (str): URL address
-        
+
         Returns:
             response object:res
     '''
@@ -39,7 +39,7 @@ def scrap_website(response):
     ''' Scrap website content
         Parameters:
             response (response object): response
-        
+
         Returns:
             bs4 object:soup
     '''

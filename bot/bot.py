@@ -9,6 +9,7 @@ import discord
 import bot_utils
 import re
 import asyncio
+import logging
 from discord.ext import tasks
 from constants import CFG_FILE, PAGE_URL, MAX_MSG_LENGTH
 
@@ -23,23 +24,34 @@ class Bot(discord.Client):
         # ID of latest article published on discord
         self.latest_article_id = ''
 
+        log_dir = str(bot_utils.get_config_data(CFG_FILE, 'LOG_DIR'))
+        logging.basicConfig(filename=log_dir,
+                            encoding='utf-8',
+                            level=logging.DEBUG,
+                            format='%(asctime)s %(message)s',
+                            datefmt='%m/%d/%Y %I:%M:%S %p')
+
     async def on_ready(self):
         print(f'Started as {self.user}')
-
+        logging.info(f'Started as {self.user}')
         channel_id = int(bot_utils.get_config_data(CFG_FILE, 'CHANNEL_ID'))
         if channel_id is None:
+            logging.error(f'Unable to retrieve channel id from config file: {CFG_FILE}')
             raise Exception(f'Unable to retrieve channel id from config file: {CFG_FILE}')
         self.channel = self.get_channel(channel_id)
         self.publish_articles.start()
 
     @tasks.loop(seconds=10.0, reconnect=True)
     async def publish_articles(self):
-        await self.wait_until_ready()
-        articles = self.get_articles()
-        for title, content in articles:
-            messages = self.create_discord_messages(title, content)
-            for msg in messages:
-                await self.channel.send(msg)
+        try:
+            await self.wait_until_ready()
+            articles = self.get_articles()
+            for title, content in articles:
+                messages = self.create_discord_messages(title, content)
+                for msg in messages:
+                    await self.channel.send(msg)
+        except Exception as err:
+            logging.error(err)
 
     def create_discord_messages(self, title, content):
         ''' Create list of messages with discord decorators and
@@ -47,7 +59,7 @@ class Bot(discord.Client):
             Parameters:
                 title (str): article title
                 content (str): article title
-            
+
             Returns:
                 messages (list): List of discord messages
         '''
@@ -64,8 +76,9 @@ class Bot(discord.Client):
 
     def get_articles(self):
         ''' Get list od articles to publish
-                Returns:
-                    article_list (list): List of tuples (article_title, article_content)
+
+            Returns:
+                article_list (list): List of tuples (article_title, article_content)
         '''
         res = bot_utils.get_response(PAGE_URL)
         page = bot_utils.scrap_website(res)
@@ -90,11 +103,11 @@ class Bot(discord.Client):
                 self.articles_ids.append(article_id)
 
     def find_unpublished_articles(self):
-        ''' Compare current articles IDs from main page 
+        ''' Compare current articles IDs from main page
             with ID of lastest published article on discord
 
             Returns:
-                artiles_to_publish (list): List of IDs
+                articles_to_publish (list): List of IDs
         '''
         articles_to_publish = []
         # Iterate from the oldest to the newest article
@@ -105,9 +118,9 @@ class Bot(discord.Client):
                 self.latest_article_id = i
                 articles_to_publish.append(i)
         return articles_to_publish
-        
+
     def get_article_content(self, articles_ids):
-        ''' Get article title and content 
+        ''' Get article title and content
 
             Parameters:
                 articles_ids (list): List of unpublished articles IDs
@@ -130,6 +143,7 @@ class Bot(discord.Client):
 if __name__ == "__main__":
     token = bot_utils.get_config_data(CFG_FILE, 'BOT_TOKEN')
     if token is None:
+        logging.error(f'Unable to retrieve channel id from config file: {CFG_FILE}')
         raise Exception(f'Unable to retrieve token from config file: {CFG_FILE}')
 
     bot = Bot()
